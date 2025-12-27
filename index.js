@@ -14,6 +14,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.get('/healthz', (req, res) => res.status(200).send('OK'));
+
 app.get('/', (req, res) => {
     res.render('index');
 });
