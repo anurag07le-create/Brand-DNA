@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Dashboard - <%= data.url %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="dashboard-page">
+
+    <div class="dashboard-container">
+        <!-- Sidebar / Header Area -->
+        <header class="dashboard-header">
+            <h2 class="site-title">
+                <%= data.meta.title || data.url %>
+            </h2>
+            <a href="<%= data.url %>" target="_blank" class="site-link">
+                <%= data.url %>
+            </a>
+            <a href="/" class="reset-btn">Reset Business DNA</a>
+        </header>
+
+        <div class="grid-layout">
+            <!-- Col 1: Brand Identity -->
+            <div class="column col-left">
+                <!-- Logo Card -->
+                <div class="card logo-card">
+                    <div class="card-content">
+                        <!-- Main Logo -->
+                        <div class="main-logo-container">
+                            <% if (data.assets.logo) { %>
+                                <img src="<%= data.assets.logo %>" alt="Main Logo" class="main-logo">
+                                <% } else { %>
+                                    <div class="placeholder-logo">
+                                        <%= data.meta.brand ? data.meta.brand[0] : 'W' %>
+                                    </div>
+                                    <% } %>
+                        </div>
+
+                        <div class="brand-info">
+                            <h3 class="logo-text">
+                                <%= data.meta.brand || data.meta.title %>
+                            </h3>
+                            <% if (data.assets.favicons && data.assets.favicons.length> 0) { %>
+                                <div class="favicon-row">
+                                    <img src="<%= data.assets.favicons[0] %>" alt="Favicon" class="favicon-small">
+                                    <span>Favicon</span>
+                                </div>
+                                <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fonts Card -->
+                <div class="card fonts-card">
+                    <h3>Fonts</h3>
+                    <div class="font-preview">
+                        <span class="aa">Aa</span>
+                        <div class="font-names">
+                            <p>
+                                <%= data.fonts.heading || 'Default Heading' %>
+                            </p>
+                            <span class="sub">Heading Font</span>
+                        </div>
+                    </div>
+                    <div class="font-preview">
+                        <span class="aa small">Aa</span>
+                        <div class="font-names">
+                            <p>
+                                <%= data.fonts.body || 'Default Body' %>
+                            </p>
+                            <span class="sub">Body Font</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colors Card -->
+                <div class="card colors-card">
+                    <h3>Colors</h3>
+                    <div class="color-palette">
+                        <% data.colors.forEach(color=> { %>
+                            <div class="color-swatch">
+                                <div class="swatch" style="background-color: <%= color %>"></div>
+                                <span>
+                                    <%= color %>
+                                </span>
+                            </div>
+                            <% }) %>
+                    </div>
+                </div>
+
+                <!-- Meta/Tagline Card -->
+                <div class="card text-card">
+                    <h3>Tagline / Description</h3>
+                    <p class="highlight-text">
+                        <%= data.meta.description || 'No description found.' %>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Col 2: Main Content (Screenshot + Assets) -->
+            <div class="column col-right">
+                <!-- Screenshot Card -->
+                <div class="card screenshot-card">
+                    <div class="card-header">
+                        <h2>Full Page Screenshot</h2>
+                        <span class="badge">Desktop View</span>
+                    </div>
+                    <div class="screenshot-container">
+                        <img src="<%= data.assets.screenshot %>" alt="Full Page Screenshot" loading="lazy">
+                    </div>
+                </div>
+
+                <!-- Assets / Gallery -->
+                <div class="card images-card">
+                    <h3>Images & Assets</h3>
+                    <div class="image-grid">
+                        <% data.assets.images.forEach(img=> { %>
+                            <div class="img-item">
+                                <img src="<%= img %>" alt="Asset" loading="lazy">
+                            </div>
+                            <% }) %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

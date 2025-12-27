@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website DNA - Analyze</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="entry-page">
+    <div class="container">
+        <h1 class="logo-text">Website <span class="highlight">DNA</span></h1>
+
+        <% if (locals.error) { %>
+            <div class="alert error">
+                <%= error %>
+            </div>
+            <% } %>
+
+                <form id="dnaForm" class="analyze-form">
+                    <div class="input-group">
+                        <input type="url" id="urlInput" name="url" placeholder="https://example.com" required
+                            autocomplete="off">
+                        <button type="submit">Analyze DNA</button>
+                    </div>
+                </form>
+                <p class="subtitle">Enter any URL to extract its design DNA</p>
+
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                    <div class="loader-content">
+                        <div class="spinner"></div>
+                        <h2 id="taskName">Initializing...</h2>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p id="timeEst" class="time-est">Est. time: ~30s</p>
+                    </div>
+                </div>
+    </div>
+
+    <script>
+        document.getElementById('dnaForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value;
+            if (!url) return;
+
+            // Show UI
+            document.getElementById('dnaForm').style.display = 'none';
+            document.querySelector('.subtitle').style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            // Start SSE
+            const eventSource = new EventSource(`/analyze-stream?url=${encodeURIComponent(url)}`);
+
+            eventSource.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'progress') {
+                    document.getElementById('taskName').textContent = data.task;
+                    document.getElementById('progressFill').style.width = data.progress + '%';
+                } else if (data.type === 'complete') {
+                    eventSource.close();
+                    window.location.href = data.redirectUrl;
+                } else if (data.type === 'error') {
+                    eventSource.close();
+                    alert(data.message);
+                    window.location.reload();
+                }
+            };
+
+            eventSource.onerror = function () {
+                eventSource.close();
+                // If it wasn't a clean close
+                // alert('Connection lost. Please try again.');
+                // window.location.reload();
+            };
+        });
+    </script>
