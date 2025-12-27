@@ -36,10 +36,19 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
                 ignoreHTTPSErrors: true,
             });
         } else {
-            console.log('[Scraper] Running in Local mode');
+            console.log('[Scraper] Running in Local/Render mode');
             browser = await puppeteer.launch({
                 headless: "new",
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1920,1080']
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--window-size=1920,1080',
+                    '--disable-dev-shm-usage', // Critical for Render/Docker
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--disable-gpu'
+                ]
             });
         }
 
