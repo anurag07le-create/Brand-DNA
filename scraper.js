@@ -228,9 +228,9 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
                 let score = 0;
                 const src = img.currentSrc || img.src || (img.tagName === 'SVG' ? 'svg' : '');
                 const alt = img.getAttribute('alt') || '';
-                const className = img.className || '';
-                const id = img.id || '';
-                const filename = src.split('/').pop().toLowerCase();
+                const className = img.getAttribute('class') || ''; // Fix: className can be object on SVG
+                const id = img.getAttribute('id') || '';
+                const filename = src ? src.split('/').pop().toLowerCase() : '';
 
                 // 1. Check Keywords
                 if (filename.includes('logo')) score += 5;
