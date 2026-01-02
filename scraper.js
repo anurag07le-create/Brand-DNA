@@ -147,8 +147,14 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         // Even locally, returning base64 is cleaner for a stateless architecture.
         // However, ColorThief needs a file path or buffer.
 
-        const screenshotBuffer = await page.screenshot({ fullPage: false, encoding: 'binary' });
-        const screenshotBase64 = `data: image / png; base64, ${screenshotBuffer.toString('base64')} `;
+        // Optimize size: JPEG, Quality 50, ensure < 1MB usually
+        const screenshotBuffer = await page.screenshot({
+            fullPage: false,
+            type: 'jpeg',
+            quality: 50,
+            encoding: 'binary'
+        });
+        const screenshotBase64 = `data:image/jpeg;base64,${screenshotBuffer.toString('base64')}`;
 
         // LOCAL FALLBACK: Save to file for debugging if needed, or just standard behavior
         let screenshotPathForColorThief = null;
