@@ -57,27 +57,40 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         const page = await browser.newPage();
         await page.setViewport({ width: 1920, height: 1080 });
 
+        // Enable Request Interception to speed up loading
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+            const resourceType = req.resourceType();
+            // Block heavy/unnecessary resources
+            // User specifically requested FONTS, so we MUST NOT block 'font'
+            if (['media', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'].includes(resourceType)) {
+                req.abort();
+            } else {
+                req.continue();
+            }
+        });
+
         // Go to URL
         onProgress("Navigating to website...", 10);
         console.log('[Scraper] Navigating to page...');
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 55000 }); // Slightly less than 60s
+        // Reduced timeout to 30s to fail fast
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
         console.log('[Scraper] Page loaded (domcontentloaded)');
 
         // Auto-scroll to trigger lazy loading
-        // Vercel has timeout limits, so we speed this up significantly
         onProgress("Scanning for lazy-loaded assets...", 20);
         console.log('[Scraper] Starting auto-scroll for lazy loading...');
         await page.evaluate(async () => {
             await new Promise((resolve) => {
                 let totalHeight = 0;
-                const distance = 400; // Larger jumps
+                const distance = 800; // Larger jumps (was 400)
                 const timer = setInterval(() => {
                     const scrollHeight = document.body.scrollHeight;
                     window.scrollBy(0, distance);
                     totalHeight += distance;
 
-                    // Stop if we reach bottom OR if we've scrolled too much (safeguard for infinite scroll)
-                    if (totalHeight >= scrollHeight || totalHeight > 15000) {
+                    // Reduced limit to 8000 (was 15000)
+                    if (totalHeight >= scrollHeight || totalHeight > 8000) {
                         clearInterval(timer);
                         resolve();
                     }
@@ -89,8 +102,7 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         // Wait for network idle to ensure images load
         onProgress("Waiting for network idle...", 40);
         try {
-            // Reduced timeout for serverless
-            await page.waitForNetworkIdle({ timeout: 2000 }).catch(() => { });
+            await page.waitForNetworkIdle({ timeout: 1500 }).catch(() => { });
         } catch (e) { }
 
         // Get generic metadata
