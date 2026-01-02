@@ -108,12 +108,10 @@ app.post('/api', async (req, res) => {
         // Scrape without progress callback (standard wait)
         const data = await scrapeWebsite(targetUrl);
 
-        console.log('[API] Scrape complete. Sending JSON response...');
         res.json({
             success: true,
             data: data
         });
-        console.log('[API] Response sent successfully.');
     } catch (error) {
         console.error("[API Error]", error);
         res.status(500).json({
