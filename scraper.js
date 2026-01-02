@@ -230,9 +230,9 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
             } catch (err) {
                 return imgSrc;
             }
-        });
+        }).filter(img => !img.startsWith('data:')); // STRICTLY remove data URIs
 
-        const uniqueImages = [...new Set(resolvedImages)].slice(0, 80);
+        const uniqueImages = [...new Set(resolvedImages)].slice(0, 50); // Limit to 50 for safety
         console.log(`[Scraper] Found ${uniqueImages.length} unique images`);
 
         const favicons = [];
