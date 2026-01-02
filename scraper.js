@@ -147,7 +147,10 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         // Even locally, returning base64 is cleaner for a stateless architecture.
         // However, ColorThief needs a file path or buffer.
 
-        // Optimize size: JPEG, Quality 50, ensure < 1MB usually
+        // RESIZE for Vercel Safety: Ensure the screenshot is small (800px width)
+        // This dramatically reduces payload size (~100-200KB)
+        await page.setViewport({ width: 800, height: 600 });
+
         const screenshotBuffer = await page.screenshot({
             fullPage: false,
             type: 'jpeg',
