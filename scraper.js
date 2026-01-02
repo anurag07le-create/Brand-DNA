@@ -57,40 +57,27 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         const page = await browser.newPage();
         await page.setViewport({ width: 1920, height: 1080 });
 
-        // Enable Request Interception to speed up loading
-        await page.setRequestInterception(true);
-        page.on('request', (req) => {
-            const resourceType = req.resourceType();
-            // Block heavy/unnecessary resources
-            // User specifically requested FONTS, so we MUST NOT block 'font'
-            if (['media', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'].includes(resourceType)) {
-                req.abort();
-            } else {
-                req.continue();
-            }
-        });
-
         // Go to URL
         onProgress("Navigating to website...", 10);
         console.log('[Scraper] Navigating to page...');
-        // Reduced timeout to 30s to fail fast
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 55000 }); // Slightly less than 60s
         console.log('[Scraper] Page loaded (domcontentloaded)');
 
         // Auto-scroll to trigger lazy loading
+        // Vercel has timeout limits, so we speed this up significantly
         onProgress("Scanning for lazy-loaded assets...", 20);
         console.log('[Scraper] Starting auto-scroll for lazy loading...');
         await page.evaluate(async () => {
             await new Promise((resolve) => {
                 let totalHeight = 0;
-                const distance = 800; // Larger jumps (was 400)
+                const distance = 400; // Larger jumps
                 const timer = setInterval(() => {
                     const scrollHeight = document.body.scrollHeight;
                     window.scrollBy(0, distance);
                     totalHeight += distance;
 
-                    // Reduced limit to 8000 (was 15000)
-                    if (totalHeight >= scrollHeight || totalHeight > 8000) {
+                    // Stop if we reach bottom OR if we've scrolled too much (safeguard for infinite scroll)
+                    if (totalHeight >= scrollHeight || totalHeight > 15000) {
                         clearInterval(timer);
                         resolve();
                     }
@@ -102,7 +89,8 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         // Wait for network idle to ensure images load
         onProgress("Waiting for network idle...", 40);
         try {
-            await page.waitForNetworkIdle({ timeout: 1500 }).catch(() => { });
+            // Reduced timeout for serverless
+            await page.waitForNetworkIdle({ timeout: 2000 }).catch(() => { });
         } catch (e) { }
 
         // Get generic metadata
@@ -147,17 +135,8 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
         // Even locally, returning base64 is cleaner for a stateless architecture.
         // However, ColorThief needs a file path or buffer.
 
-        // RESIZE for Vercel Safety: Ensure the screenshot is small (800px width)
-        // This dramatically reduces payload size (~100-200KB)
-        await page.setViewport({ width: 800, height: 600 });
-
-        const screenshotBuffer = await page.screenshot({
-            fullPage: false,
-            type: 'jpeg',
-            quality: 50,
-            encoding: 'binary'
-        });
-        const screenshotBase64 = `data:image/jpeg;base64,${screenshotBuffer.toString('base64')}`;
+        const screenshotBuffer = await page.screenshot({ fullPage: false, encoding: 'binary' });
+        const screenshotBase64 = `data: image / png; base64, ${screenshotBuffer.toString('base64')} `;
 
         // LOCAL FALLBACK: Save to file for debugging if needed, or just standard behavior
         let screenshotPathForColorThief = null;
@@ -230,9 +209,9 @@ async function scrapeWebsite(targetUrl, onProgress = () => { }) {
             } catch (err) {
                 return imgSrc;
             }
-        }).filter(img => !img.startsWith('data:')); // STRICTLY remove data URIs
+        });
 
-        const uniqueImages = [...new Set(resolvedImages)].slice(0, 50); // Limit to 50 for safety
+        const uniqueImages = [...new Set(resolvedImages)].slice(0, 80);
         console.log(`[Scraper] Found ${uniqueImages.length} unique images`);
 
         const favicons = [];
